@@ -1,0 +1,20 @@
+# Deploy production when pushing to main. Add repo secret: VERCEL_TOKEN
+# (create at https://vercel.com/account/tokens — scope: full account or project deploy)
+name: Deploy to Vercel
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: team_pivcfqNs5hVdGZOm7jgKs5VX
+          vercel-project-id: prj_1B9VlFr1HMccCC2IWo7GgW3QV4ZL
+          vercel-args: "--prod"
