@@ -1,5 +1,10 @@
-# Deploy production when pushing to main. Add repo secret: VERCEL_TOKEN
-# (create at https://vercel.com/account/tokens — scope: full account or project deploy)
+# Deploy production on push to main.
+# 1. Create a NEW Vercel project (no reuse of an old one): from this folder run
+#    npx vercel link
+#    Choose "Link to existing project" → "Create new project", or create the project
+#    in the Vercel dashboard first, then link.
+# 2. From .vercel/project.json copy orgId → GitHub secret VERCEL_ORG_ID, projectId → VERCEL_PROJECT_ID.
+# 3. Add VERCEL_TOKEN from https://vercel.com/account/tokens
 name: Deploy to Vercel
 on:
   push:
@@ -15,6 +20,6 @@ jobs:
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: team_pivcfqNs5hVdGZOm7jgKs5VX
-          vercel-project-id: prj_1B9VlFr1HMccCC2IWo7GgW3QV4ZL
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: "--prod"
