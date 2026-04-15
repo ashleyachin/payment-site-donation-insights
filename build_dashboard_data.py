@@ -10,7 +10,7 @@ INPUT_CSV_CANDIDATES = [
     ROOT.parent / "card-scanner" / "donation_site_classification_output.csv",
     ROOT.parent / "donation_site_classification_output.csv",
 ]
-OUTPUT_JSON = ROOT / "site_data.json"
+OUTPUT_JSON = ROOT / "public" / "site_data.json"
 DONATION_ALL = ROOT / "donation_sites_all.csv"
 DONATION_UNIQUE = ROOT / "donation_sites_unique_merchants.csv"
 
@@ -123,6 +123,7 @@ def main():
         }
         print(f"Warning: could not embed HTML report data: {exc}")
 
+    OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_JSON.open("w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=True, indent=2)
 

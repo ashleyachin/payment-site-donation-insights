@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent
-OUTPUT = ROOT / "html_enabled_accounts.json"
+OUTPUT = ROOT / "public" / "html_enabled_accounts.json"
 
 # Same Desktop location pattern as analyze_donation_sites.py / export_merchant_list.py
 HTML_REPORTS = [
@@ -82,6 +82,7 @@ def build_html_payload() -> dict:
 
 def main() -> None:
     payload = build_html_payload()
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(payload, ensure_ascii=True, indent=2), encoding="utf-8")
     print(f"Wrote {OUTPUT} ({len(payload['rows'])} HTML-enabled accounts)")
     if payload["missingFiles"]:

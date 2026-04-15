@@ -1,7 +1,10 @@
 .vercel
+.next/
+node_modules/
 __pycache__/
 *.py[cod]
 .DS_Store
 .env
 .env.*
 !.env.example
+.env.local

@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent
-SITE_DATA = ROOT / "site_data.json"
+SITE_DATA = ROOT / "public" / "site_data.json"
 OUTPUT = ROOT / "merchant_list_donation_and_sic8398.csv"
 OUTPUT_FALLBACK = ROOT / "merchant_list_donation_and_sic8398_with_email.csv"
 
