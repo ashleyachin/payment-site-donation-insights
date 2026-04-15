@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Site Donation Insights</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --surface: #ffffff;
+      --text: #10243f;
+      --muted: #5c6e86;
+      --border: #d9e2ef;
+      --header-bg: #e9f0fb;
+      --btn-bg: #e8efff;
+      --btn-border: #b8c8ea;
+      --btn-text: #183a72;
+      --hover: #f7faff;
+      --pill-default-bg: #e9f0ff;
+      --pill-default-text: #264a86;
+      --pill-donation-bg: #e7f8ef;
+      --pill-donation-text: #12643b;
+      --pill-review-bg: #fff6db;
+      --pill-review-text: #8a5a00;
+      --pill-nondonation-bg: #ffecee;
+      --pill-nondonation-text: #8d2031;
+      --pill-html-bg: #ede7ff;
+      --pill-html-text: #4a2f9e;
+    }
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(16, 36, 63, 0.05); }
+    .grid { display: grid; gap: 12px; }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    #kpis { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+    .muted { color: var(--muted); font-size: 12px; }
+    .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; background: var(--pill-default-bg); color: var(--pill-default-text); font-size: 12px; font-weight: 600; }
+    .pill.donation { background: var(--pill-donation-bg); color: var(--pill-donation-text); }
+    .pill.review { background: var(--pill-review-bg); color: var(--pill-review-text); }
+    .pill.nondonation { background: var(--pill-nondonation-bg); color: var(--pill-nondonation-text); }
+    .pill.html { background: var(--pill-html-bg); color: var(--pill-html-text); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 10px; text-align: left; vertical-align: top; }
+    thead th { background: var(--header-bg); position: sticky; top: 0; }
+    tbody tr:hover { background: var(--hover); }
+    .scroll { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+    input, select { border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 13px; background: #fff; color: var(--text); }
+    h1, h2 { color: #16355f; }
+    a.button { text-decoration: none; border: 1px solid var(--btn-border); border-radius: 6px; padding: 6px 10px; color: var(--btn-text); display: inline-block; background: var(--btn-bg); font-weight: 600; }
+    a.button:hover { filter: brightness(0.98); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Payment Site Donation Insights</h1>
+    <p id="load-error" style="display:none;padding:12px;background:#ffecee;border:1px solid #e8b8c0;border-radius:8px;color:#6b1a28;margin-bottom:12px;"></p>
+
+    <div class="card" id="extra-html" style="border-color:#c4b8e8;background:linear-gradient(180deg,#faf8ff 0%,#ffffff 48%);">
+      <h2 style="margin-top:0;">Extra HTML payment sites</h2>
+      <p class="muted"><span id="html-generated"></span>Merchants where <strong>ExtraHtml</strong> is TRUE (payment page has been edited). Data comes from Payfac / Traditional <em>withHTML</em> usage reports.</p>
+      <div id="html-controls">
+        <div style="display:grid;gap:8px;grid-template-columns:2fr 1fr 1fr;margin-bottom:8px;">
+          <input id="html-q" type="search" placeholder="Search merchant, email, URL, SIC…" autocomplete="off" />
+          <select id="html-source">
+            <option value="All">All sources</option>
+            <option value="Payfac">Payfac</option>
+            <option value="Traditional">Traditional</option>
+          </select>
+          <select id="html-8398">
+            <option value="All">SIC 8398 explorer: all</option>
+            <option value="in">In this dashboard’s SIC 8398 list</option>
+            <option value="out">Not in SIC 8398 list</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;">
+          <label style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
+            <span class="muted">SIC code</span>
+            <input id="html-sic" type="text" inputmode="numeric" placeholder="e.g. 8398" autocomplete="off" style="width:7rem;padding:8px;border:1px solid var(--border);border-radius:6px;" />
+          </label>
+          <span class="muted">Only rows whose report <strong>Sic Code</strong> matches (digits only; leave blank for all).</span>
+        </div>
+        <p class="muted" id="html-stats"></p>
+        <div class="scroll" style="max-height:480px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Merchant</th>
+                <th>Email</th>
+                <th>Source</th>
+                <th>SIC</th>
+                <th>8398 list</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody id="html-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="muted" id="html-missing" style="display:none;margin-top:10px;"></p>
+    </div>
+
+    <div class="card grid grid-4" id="kpis"></div>
+
+    <div class="card">
+      <h2>All Donation Payment Site Links</h2>
+      <p class="muted">Direct links for all donation-classified sites.</p>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Merchant</th><th>Payment Site</th><th>Source</th><th>Link</th><th>Inactive</th></tr>
+          </thead>
+          <tbody id="donation-links"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>SIC 8398 Explorer</h2>
+      <div style="display:grid;gap:8px;grid-template-columns:2fr 1fr 1fr 1fr;">
+        <input id="q" placeholder="Search merchant/site/url/reason" />
+        <select id="classification">
+          <option value="All">All Classifications</option>
+          <option value="Donation">Donation</option>
+          <option value="Needs Review">Needs Review</option>
+          <option value="Non-Donation">Non-Donation</option>
+        </select>
+        <select id="confidence">
+          <option value="All">All Confidence</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
+          <input id="show-inactive" type="checkbox" />
+          Show inactive accounts
+        </label>
+      </div>
+      <p class="muted" id="sic-stats" style="margin-top:10px;"></p>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Merchant</th><th>Site</th><th>Classification</th><th>Confidence</th><th>Score</th><th>Reason</th><th>Link</th><th>Promote</th><th>Inactive</th>
+            </tr>
+          </thead>
+          <tbody id="sic-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function main() {
+      const siteRes = await fetch('./site_data.json', { cache: 'no-store' });
+      if (!siteRes.ok) {
+        throw new Error(
+          `Could not load site_data.json (HTTP ${siteRes.status}). ` +
+            'Serve this folder over HTTP, e.g. python -m http.server 8080 — do not open index.html as a file.',
+        );
+      }
+      const data = await siteRes.json();
+      let htmlData = null;
+      const embedded = data.htmlEnabledAccounts;
+      const embOk = embedded && Array.isArray(embedded.rows);
+      let fileData = null;
+      try {
+        const htmlRes = await fetch('./html_enabled_accounts.json', { cache: 'no-store' });
+        if (htmlRes.ok) fileData = await htmlRes.json();
+      } catch (_) {}
+      const fileOk = fileData && Array.isArray(fileData.rows);
+      const embN = embOk ? embedded.rows.length : 0;
+      const fileN = fileOk ? fileData.rows.length : 0;
+      if (fileN > embN) {
+        htmlData = fileData;
+      } else if (embN > 0) {
+        htmlData = embedded;
+      } else if (fileN > 0) {
+        htmlData = fileData;
+      } else if (embOk) {
+        htmlData = embedded;
+      } else if (fileOk) {
+        htmlData = fileData;
+      } else {
+        htmlData = embedded || fileData || { rows: [], totals: { all: 0 }, missingFiles: [] };
+      }
+
+      const promotedToDonation = new Set();
+      const inactiveAccounts = new Set();
+
+      function normalize(value) {
+        return (value || '').toString().trim().toLowerCase();
+      }
+
+      function accountKey(merchantId, paymentSiteName, merchantName, url) {
+        const normalizedUrl = normalize(url);
+        if (normalizedUrl) return `url:${normalizedUrl}`;
+        return `acct:${normalize(merchantId)}|${normalize(paymentSiteName)}|${normalize(merchantName)}`;
+      }
+
+      function sicRowKey(row) {
+        return accountKey(
+          row['Merchant ID'],
+          row['Payment Site Name'],
+          row['Merchant Name'],
+          row['URL']
+        );
+      }
+
+      function donationLinkKey(row) {
+        return accountKey(
+          row.merchantId,
+          row.paymentSiteName,
+          row.merchantName,
+          row.url
+        );
+      }
+
+      function effectiveClassification(row) {
+        const key = sicRowKey(row);
+        const original = row['Donation Classification'] || '';
+        if (original === 'Needs Review' && promotedToDonation.has(key)) {
+          return 'Donation';
+        }
+        return original;
+      }
+
+      function toDonationLink(row) {
+        return {
+          merchantId: row['Merchant ID'] || '',
+          merchantName: row['Merchant Name'] || '',
+          paymentSiteName: row['Payment Site Name'] || '',
+          url: row['URL'] || '',
+          score: Number(row['Score']) || 0,
+          reason: row['Matched Indicators / Reason'] || '',
+          sourceFile: row['Source File'] || '',
+        };
+      }
+
+      function combinedDonationLinks(allRows, baseDonationLinks) {
+        const linksByKey = new Map();
+        baseDonationLinks.forEach((row) => {
+          linksByKey.set(donationLinkKey(row), row);
+        });
+        allRows.forEach((row) => {
+          if (effectiveClassification(row) !== 'Donation') return;
+          const link = toDonationLink(row);
+          linksByKey.set(donationLinkKey(link), link);
+        });
+        return [...linksByKey.values()].sort((a, b) => (b.score || 0) - (a.score || 0));
+      }
+
+      const kpis = [
+        ['All Rows', data.totals?.allRows],
+        ['Donation Rows', data.totals?.donationRows],
+        ['Donation Merchants', data.totals?.donationUniqueMerchants],
+        ['Donation Links', data.totals?.donationUniqueLinks],
+        ['SIC 8398 Rows', data.sic8398?.rows],
+      ];
+      if (htmlData) {
+        const n = htmlData.totals?.all ?? htmlData.rows?.length ?? 0;
+        kpis.push(['Extra HTML (TRUE)', n]);
+      }
+      const kpiEl = document.getElementById('kpis');
+      kpiEl.innerHTML = '';
+      kpis.forEach(([label, value]) => {
+        const d = document.createElement('div');
+        d.className = 'card';
+        d.style.margin = '0';
+        d.innerHTML = `<div class="muted">${label}</div><div style="font-size:28px;font-weight:700">${value}</div>`;
+        kpiEl.appendChild(d);
+      });
+
+      const donationBody = document.getElementById('donation-links');
+
+      const allRows = data.sic8398?.rowsData || [];
+      const tableBody = document.getElementById('sic-table');
+      const qEl = document.getElementById('q');
+      const clsEl = document.getElementById('classification');
+      const confEl = document.getElementById('confidence');
+      const showInactiveEl = document.getElementById('show-inactive');
+      const statEl = document.getElementById('sic-stats');
+
+      const sic8398MidSet = new Set(
+        (data.sic8398?.rowsData || []).map((row) => (row['Merchant ID'] || '').trim()).filter(Boolean)
+      );
+
+      const htmlGeneratedEl = document.getElementById('html-generated');
+      const htmlControlsEl = document.getElementById('html-controls');
+      const htmlMissingEl = document.getElementById('html-missing');
+      const htmlTableBody = document.getElementById('html-table');
+      const htmlStatsEl = document.getElementById('html-stats');
+      const htmlQEl = document.getElementById('html-q');
+      const htmlSourceEl = document.getElementById('html-source');
+      const html8398El = document.getElementById('html-8398');
+      const htmlSicEl = document.getElementById('html-sic');
+
+      const htmlHasRows = htmlData && Array.isArray(htmlData.rows) && htmlData.rows.length > 0;
+      if (htmlHasRows) {
+        if (htmlData.generatedAt && htmlGeneratedEl) {
+          htmlGeneratedEl.textContent = `Built ${new Date(htmlData.generatedAt).toLocaleString()} · `;
+        }
+      } else {
+        htmlMissingEl.style.display = 'block';
+        let msg =
+          'No HTML-enabled data loaded. From this folder run: python build_dashboard_data.py (recommended — includes HTML in site_data.json), then hard-refresh (Ctrl+F5). Or: python build_html_enabled_data.py';
+        if (htmlData && htmlData.loadError) {
+          msg = `HTML data could not be built: ${htmlData.loadError}`;
+        } else if (htmlData && htmlData.missingFiles && htmlData.missingFiles.length) {
+          msg = `ExtraHtml report files not found: ${htmlData.missingFiles.join('; ')}`;
+        }
+        htmlMissingEl.textContent = msg;
+      }
+
+      function sicDigitsOnly(value) {
+        return String(value ?? '').replace(/\D/g, '');
+      }
+
+      function renderHtmlTable() {
+        if (!htmlData || !Array.isArray(htmlData.rows)) return;
+        const q = (htmlQEl.value || '').toLowerCase().trim();
+        const src = htmlSourceEl.value;
+        const filter8398 = html8398El.value;
+        const sicFilterDigits = htmlSicEl ? sicDigitsOnly(htmlSicEl.value) : '';
+
+        const filtered = htmlData.rows.filter((row) => {
+          if (src !== 'All' && row.sourceFile !== src) return false;
+          const mid = (row.merchantId || '').trim();
+          const in8398 = sic8398MidSet.has(mid);
+          if (filter8398 === 'in' && !in8398) return false;
+          if (filter8398 === 'out' && in8398) return false;
+          if (sicFilterDigits) {
+            const rowSic = sicDigitsOnly(row.sicCode);
+            if (rowSic !== sicFilterDigits) return false;
+          }
+          if (!q) return true;
+          const blob = [
+            row.merchantName,
+            row.email,
+            row.url,
+            row.sicCode,
+            row.sicDesc,
+            row.merchantId,
+            row.sourceFile,
+          ]
+            .join(' ')
+            .toLowerCase();
+          return blob.includes(q);
+        });
+
+        htmlStatsEl.textContent = `${filtered.length} shown of ${htmlData.rows.length} HTML-enabled accounts`;
+        htmlTableBody.innerHTML = '';
+        filtered.forEach((row) => {
+          const mid = (row.merchantId || '').trim();
+          const in8398 = sic8398MidSet.has(mid);
+          const url = row.url || '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${escapeHtml(row.merchantName || 'Unknown')}</strong><div class="muted">${escapeHtml(row.merchantId || '')}</div></td>
+            <td>${escapeHtml(row.email || '')}</td>
+            <td>${escapeHtml(row.sourceFile || '')}</td>
+            <td><span class="muted">${escapeHtml(row.sicCode || '')}</span> ${escapeHtml(row.sicDesc || '')}</td>
+            <td><span class="pill html">${in8398 ? 'In list' : '—'}</span></td>
+            <td>${url ? `<a class="button" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">Open</a>` : '—'}</td>`;
+          htmlTableBody.appendChild(tr);
+        });
+      }
+
+      function renderDonationLinks() {
+        donationBody.innerHTML = '';
+        const links = combinedDonationLinks(allRows, data.donationLinks || []);
+        links.forEach((r) => {
+          const key = donationLinkKey(r);
+          if (!showInactiveEl.checked && inactiveAccounts.has(key)) return;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${r.merchantName || 'Unknown'}</strong><div class="muted">${r.merchantId || ''}</div></td>
+            <td>${r.paymentSiteName || ''}</td>
+            <td>${r.sourceFile || ''}</td>
+            <td>${r.url ? `<a class="button" href="${r.url}" target="_blank" rel="noreferrer">Open</a>` : 'No URL'}</td>
+            <td><input type="checkbox" data-action="inactive" data-key="${key}" ${inactiveAccounts.has(key) ? 'checked' : ''}></td>`;
+          donationBody.appendChild(tr);
+        });
+      }
+
+      function renderSicExplorer() {
+        const q = (qEl.value || '').toLowerCase().trim();
+        const cls = clsEl.value;
+        const conf = confEl.value;
+        const filtered = allRows.filter((row) => {
+          const key = sicRowKey(row);
+          const effectiveClass = effectiveClassification(row);
+          if (!showInactiveEl.checked && inactiveAccounts.has(key)) return false;
+          if (cls !== 'All' && effectiveClass !== cls) return false;
+          if (conf !== 'All' && row['Confidence Level'] !== conf) return false;
+          if (!q) return true;
+          const text = `${row['Merchant Name']} ${row['Payment Site Name']} ${row['Matched Indicators / Reason']} ${row['URL']}`.toLowerCase();
+          return text.includes(q);
+        });
+
+        statEl.textContent = `${filtered.length} rows shown of ${allRows.length} SIC 8398 rows`;
+        tableBody.innerHTML = '';
+        filtered.forEach((row) => {
+          const key = sicRowKey(row);
+          const url = row['URL'] || '';
+          const originalCls = row['Donation Classification'] || '';
+          const cls = effectiveClassification(row);
+          const pillClass = cls === 'Donation' ? 'donation' : (cls === 'Needs Review' ? 'review' : (cls === 'Non-Donation' ? 'nondonation' : ''));
+          const showPromote = originalCls === 'Needs Review' || promotedToDonation.has(key);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${row['Merchant Name'] || 'Unknown'}</strong><div class="muted">${row['Merchant ID'] || ''}</div></td>
+            <td>${row['Payment Site Name'] || ''}</td>
+            <td><span class="pill ${pillClass}">${cls}</span></td>
+            <td>${row['Confidence Level'] || ''}</td>
+            <td>${row['Score'] || ''}</td>
+            <td>${row['Matched Indicators / Reason'] || ''}</td>
+            <td>${url ? `<a class="button" href="${url}" target="_blank" rel="noreferrer">Open</a>` : 'No URL'}</td>
+            <td>${showPromote ? `<input type="checkbox" data-action="promote" data-key="${key}" ${promotedToDonation.has(key) ? 'checked' : ''}>` : ''}</td>
+            <td><input type="checkbox" data-action="inactive" data-key="${key}" ${inactiveAccounts.has(key) ? 'checked' : ''}></td>`;
+          tableBody.appendChild(tr);
+        });
+      }
+
+      function renderAll() {
+        renderDonationLinks();
+        renderSicExplorer();
+      }
+
+      donationBody.addEventListener('change', (event) => {
+        const el = event.target;
+        if (!el || !el.matches('input[type="checkbox"][data-action="inactive"]')) return;
+        const key = el.getAttribute('data-key');
+        if (!key) return;
+        if (el.checked) inactiveAccounts.add(key);
+        else inactiveAccounts.delete(key);
+        renderAll();
+      });
+
+      tableBody.addEventListener('change', (event) => {
+        const el = event.target;
+        if (!el || !el.matches('input[type="checkbox"]')) return;
+        const action = el.getAttribute('data-action');
+        const key = el.getAttribute('data-key');
+        if (!key) return;
+
+        if (action === 'promote') {
+          if (el.checked) promotedToDonation.add(key);
+          else promotedToDonation.delete(key);
+        } else if (action === 'inactive') {
+          if (el.checked) inactiveAccounts.add(key);
+          else inactiveAccounts.delete(key);
+        }
+
+        renderAll();
+      });
+
+      qEl.addEventListener('input', renderAll);
+      clsEl.addEventListener('change', renderAll);
+      confEl.addEventListener('change', renderAll);
+      showInactiveEl.addEventListener('change', renderAll);
+      if (htmlHasRows) {
+        htmlQEl.addEventListener('input', renderHtmlTable);
+        htmlSourceEl.addEventListener('change', renderHtmlTable);
+        html8398El.addEventListener('change', renderHtmlTable);
+        if (htmlSicEl) htmlSicEl.addEventListener('input', renderHtmlTable);
+        renderHtmlTable();
+      }
+      renderAll();
+    }
+
+    main().catch((err) => {
+      const el = document.getElementById('load-error');
+      if (el) {
+        el.style.display = 'block';
+        el.textContent = String(err && err.message ? err.message : err);
+      }
+    });
+  </script>
+</body>
+</html>

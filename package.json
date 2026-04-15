@@ -1,0 +1,5 @@
+{
+  "name": "payment-site-donation-insights",
+  "private": true,
+  "description": "Static dashboard (index.html + site_data.json)"
+}

@@ -1,0 +1,11 @@
+# Build tooling — data is baked into site_data.json / html_enabled_accounts.json
+*.py
+serve.cmd
+README.md
+# Unused JS barrel (dashboard is plain HTML)
+index.js
+Points.js
+PaymentPointsContext.js
+PaymentPointsUpdateContext.js
+# Optional local exports (not loaded by the app)
+*.csv
